@@ -23,47 +23,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     lateinit var binding: ActivityMainBinding
+    private var currentImageIndex = 0 // Initialize the counter for images
 
-    override fun onCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.YourFlowersBtn.setOnClickListener{
 
-            replaceFragment(FirstFragment())
-
-        }
-
-        binding.AddFlowersBtn.setOnClickListener{
-
-            if(ContextCompat.checkSelfPermission(
-                this,
-                        Manifest.permission.CAMERA
-                    ) == PackageManager.PERMISSION_GRANTED
-                ){
+        binding.AddFlowersBtn.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 startActivityForResult(intent, CAMERA_REQUEST_CODE)
-            }else{
+            } else {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.CAMERA),
                     CAMERA_PREMISSION_CODE
                 )
             }
-
         }
     }
 
-    private fun replaceFragment(fragment : Fragment ){
-
+    private fun replaceFragment(fragment: Fragment) {
         val fragmentManager = supportFragmentManager
         val fragmentTransaction = fragmentManager.beginTransaction()
-
-        fragmentTransaction.replace(R.id.fragmentContainer,fragment)
+        fragmentTransaction.replace(R.id.fragmentContainer, fragment)
         fragmentTransaction.commit()
     }
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -72,14 +63,14 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if(requestCode == CAMERA_REQUEST_CODE){
-            if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == CAMERA_PREMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 startActivityForResult(intent, CAMERA_REQUEST_CODE)
-            }else{
+            } else {
                 Toast.makeText(this,
-                    "Oops you just denied the permission for camera. " +
-                    "Don't worry you can allow it in the settings. ",
+                    "Oops, you just denied the permission for camera. " +
+                            "Don't worry, you can allow it in the settings.",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -88,10 +79,24 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(resultCode == Activity.RESULT_OK){
-            if(requestCode == CAMERA_REQUEST_CODE){
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == CAMERA_REQUEST_CODE) {
                 val thumbNail: Bitmap = data!!.extras!!.get("data") as Bitmap
-                binding.ivImage.setImageBitmap(thumbNail)
+
+                // Assign the photo to the corresponding ImageView
+                when (currentImageIndex) {
+                    0 -> binding.ivImage.setImageBitmap(thumbNail)
+                    1 -> binding.ivImage2.setImageBitmap(thumbNail)
+                    2 -> binding.ivImage3.setImageBitmap(thumbNail)
+                    3 -> binding.ivImage4.setImageBitmap(thumbNail)
+                    else -> {
+                        Toast.makeText(this, "All image slots are full.", Toast.LENGTH_SHORT).show()
+                        return // Do not increment if all slots are full
+                    }
+                }
+
+                // Increment the index for the next image
+                currentImageIndex++
             }
         }
     }
