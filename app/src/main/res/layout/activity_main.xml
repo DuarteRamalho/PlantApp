@@ -6,9 +6,44 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
+    <!-- Navbar with Camera Button -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/green"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <TextView
+            android:id="@+id/toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FLOWER GALLERY"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:layout_gravity="center" />
+
+        <!-- Moved the existing camera button to the Toolbar -->
+        <Button
+            android:id="@+id/AddFlowersBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:background="@android:color/transparent"
+            android:drawableLeft="@drawable/ic_camera2"
+            android:contentDescription="camera button"
+            android:paddingStart="28dp"
+            android:paddingEnd="2dp"/>
+
+
+    </androidx.appcompat.widget.Toolbar>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
         android:fillViewport="true">
 
         <RelativeLayout
@@ -34,12 +69,13 @@
                 android:padding="16dp" />
 
             <!-- Flower 2 -->
+
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/iv_image2"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 android:layout_below="@id/desc_image1"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="58dp"
                 android:scaleType="centerCrop" />
 
             <EditText
@@ -94,27 +130,11 @@
         </RelativeLayout>
     </ScrollView>
 
-
-
-
-    <Button
-        android:id="@+id/AddFlowersBtn"
-        android:layout_width="150dp"
-        android:layout_height="60dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="50dp"
-        android:background="@drawable/drawable_stroke"
-        android:text="CAMERA"
-        android:textColor="@color/brown4"
-        android:textStyle="bold" />
-
-
     <!-- Fragment Container -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="620dp"/>
-
+        android:layout_height="620dp"
+        android:layout_below="@id/toolbar" />
 
 </RelativeLayout>
