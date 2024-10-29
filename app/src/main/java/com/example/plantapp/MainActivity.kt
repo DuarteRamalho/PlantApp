@@ -1,60 +1,263 @@
 package com.example.plantapp
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.LayoutInflater
-import android.widget.ImageView
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.example.plantapp.data.Plant
 import com.example.plantapp.databinding.ActivityMainBinding
+import com.example.plantapp.firebase.FirebaseManager
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
-    companion object{
-        private const val CAMERA_PREMISSION_CODE = 1
-        private const val CAMERA_REQUEST_CODE = 2
+    companion object {
+        private const val CAMERA_PERMISSION_CODE = 1
     }
 
-    lateinit var binding: ActivityMainBinding
-    private var currentImageIndex = 0 // Initialize the counter for images
+    private lateinit var binding: ActivityMainBinding
+    private var currentImageIndex = 0
+    private lateinit var firebaseManager: FirebaseManager
+    private var currentPlant: Plant? = null
+    private val plants = mutableListOf<Plant>()
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        bitmap?.let {
+            displayImage(it)
+            // Get description from current EditText
+            val description = getCurrentDescriptionText()
+            uploadCurrentPlant(it, description)
+        } ?: run {
+            Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        firebaseManager = FirebaseManager()
+        setupUI()
+        loadSavedPlants()
+    }
 
+    private fun setupUI() {
         binding.AddFlowersBtn.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                startActivityForResult(intent, CAMERA_REQUEST_CODE)
+            if (currentImageIndex >= 4) {
+                Toast.makeText(this, "Maximum number of plants reached", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (isCameraPermissionGranted()) {
+                openCamera()
             } else {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.CAMERA),
-                    CAMERA_PREMISSION_CODE
-                )
+                requestCameraPermission()
+            }
+        }
+
+        // Setup description text watchers
+        setupDescriptionListeners()
+    }
+
+    private fun setupDescriptionListeners() {
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val description = s.toString()
+                getCurrentPlant()?.let { plant ->
+                    updatePlantDescription(plant.id, description)
+                }
+            }
+        }
+
+        binding.descImage1.addTextChangedListener(textWatcher)
+        binding.descImage2.addTextChangedListener(textWatcher)
+        binding.descImage3.addTextChangedListener(textWatcher)
+        binding.descImage4.addTextChangedListener(textWatcher)
+    }
+
+    private fun getCurrentPlant(): Plant? {
+        return if (currentImageIndex > 0 && plants.size >= currentImageIndex) {
+            plants[currentImageIndex - 1]
+        } else null
+    }
+
+    private fun getCurrentDescriptionText(): String {
+        return when (currentImageIndex) {
+            0 -> binding.descImage1.text.toString()
+            1 -> binding.descImage2.text.toString()
+            2 -> binding.descImage3.text.toString()
+            3 -> binding.descImage4.text.toString()
+            else -> ""
+        }
+    }
+
+    private fun loadSavedPlants() {
+        lifecycleScope.launch {
+            try {
+                val result = firebaseManager.getPlants()
+                if (result.isSuccess) {
+                    plants.clear()
+                    plants.addAll(result.getOrNull() ?: emptyList())
+                    plants.forEachIndexed { index, plant ->
+                        displaySavedPlant(plant, index)
+                    }
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Failed to load plants: ${result.exceptionOrNull()?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error loading plants: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
-    private fun replaceFragment(fragment: Fragment) {
-        val fragmentManager = supportFragmentManager
-        val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.fragmentContainer, fragment)
-        fragmentTransaction.commit()
+    private fun displaySavedPlant(plant: Plant, index: Int) {
+        val imageView = when (index) {
+            0 -> binding.ivImage
+            1 -> binding.ivImage2
+            2 -> binding.ivImage3
+            3 -> binding.ivImage4
+            else -> return
+        }
+
+        val descriptionView = when (index) {
+            0 -> binding.descImage1
+            1 -> binding.descImage2
+            2 -> binding.descImage3
+            3 -> binding.descImage4
+            else -> return
+        }
+
+        // Load image using Glide
+        Glide.with(this)
+            .load(plant.imageUrl)
+            .centerCrop()
+            .into(imageView)
+
+        descriptionView.setText(plant.description)
+        currentImageIndex = index + 1
+    }
+
+    private fun updatePlantDescription(plantId: String, description: String) {
+        lifecycleScope.launch {
+            try {
+                firebaseManager.updatePlantDescription(plantId, description)
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Failed to update description: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun bitmapToUri(bitmap: Bitmap): Uri {
+        val file = File(cacheDir, "plant_${UUID.randomUUID()}.jpg")
+        file.createNewFile()
+
+        val bos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos)
+        val bitmapData = bos.toByteArray()
+
+        FileOutputStream(file).use { fos ->
+            fos.write(bitmapData)
+            fos.flush()
+        }
+
+        return Uri.fromFile(file)
+    }
+
+    private fun uploadCurrentPlant(bitmap: Bitmap, description: String) {
+        lifecycleScope.launch {
+            try {
+                val imageUri = bitmapToUri(bitmap)
+                val result = firebaseManager.uploadPlant(
+                    name = "Plant ${currentImageIndex}",
+                    description = description,
+                    imageUri = imageUri
+                )
+                if (result.isSuccess) {
+                    result.getOrNull()?.let { plant ->
+                        plants.add(plant)
+                        currentPlant = plant
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Plant uploaded successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Failed to upload plant: ${result.exceptionOrNull()?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Error uploading plant: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun isCameraPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestCameraPermission() {
+        requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_CODE)
+    }
+
+    private fun openCamera() {
+        cameraLauncher.launch(null)
+    }
+
+    private fun displayImage(bitmap: Bitmap) {
+        val imageView = when (currentImageIndex) {
+            0 -> binding.ivImage
+            1 -> binding.ivImage2
+            2 -> binding.ivImage3
+            3 -> binding.ivImage4
+            else -> {
+                Toast.makeText(this, "All image slots are full.", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        imageView.setImageBitmap(bitmap)
+        currentImageIndex++
     }
 
     override fun onRequestPermissionsResult(
@@ -63,53 +266,17 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        if (requestCode == CAMERA_PREMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                startActivityForResult(intent, CAMERA_REQUEST_CODE)
-            } else {
-                Toast.makeText(this,
-                    "Oops, you just denied the permission for camera. " +
-                            "Don't worry, you can allow it in the settings.",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+        if (requestCode == CAMERA_PERMISSION_CODE &&
+            grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
+            openCamera()
+        } else {
+            Toast.makeText(
+                this,
+                "Camera permission denied. Please enable it in settings.",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == CAMERA_REQUEST_CODE) {
-                val thumbNail: Bitmap = data!!.extras!!.get("data") as Bitmap
-
-                // Determine which ImageView to use and get its size
-                val imageView = when (currentImageIndex) {
-                    0 -> binding.ivImage
-                    1 -> binding.ivImage2
-                    2 -> binding.ivImage3
-                    3 -> binding.ivImage4
-                    else -> {
-                        Toast.makeText(this, "All image slots are full.", Toast.LENGTH_SHORT).show()
-                        return // Do not increment if all slots are full
-                    }
-                }
-
-                // Get the width and height of the ImageView
-                val width = imageView.width
-                val height = imageView.height
-
-                // Resize the Bitmap to match the ImageView dimensions
-                val resizedBitmap = Bitmap.createScaledBitmap(thumbNail, width, height, false)
-
-                // Set the resized image to the ImageView
-                imageView.setImageBitmap(resizedBitmap)
-
-                // Increment the index for the next image
-                currentImageIndex++
-            }
-        }
-    }
-
 }

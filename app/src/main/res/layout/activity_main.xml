@@ -1,19 +1,22 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <!-- Navbar with Camera Button -->
+    <!-- Toolbar with Camera Button -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/green"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:id="@+id/toolbar_title"
@@ -25,116 +28,129 @@
             android:textSize="20sp"
             android:layout_gravity="center" />
 
-        <!-- Moved the existing camera button to the Toolbar -->
         <Button
             android:id="@+id/AddFlowersBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
             android:background="@android:color/transparent"
             android:drawableLeft="@drawable/ic_camera2"
-            android:contentDescription="camera button"
+            android:contentDescription="Camera button"
             android:paddingStart="28dp"
             android:paddingEnd="2dp"/>
-
-
     </androidx.appcompat.widget.Toolbar>
 
     <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/fragmentContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:fillViewport="true">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
-            <!-- Flower 1 -->
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_image"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_marginTop="20dp"
-                android:scaleType="centerCrop" />
+        <!-- Flower 1 -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_image"
+            android:layout_width="0dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <EditText
-                android:id="@+id/desc_image1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/iv_image"
-                android:hint="Enter description of flower 1"
-                android:textColor="@android:color/black"
-                android:inputType="text"
-                android:padding="16dp" />
+        <EditText
+            android:id="@+id/desc_image1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Enter description of flower 1"
+            android:textColor="@android:color/black"
+            android:inputType="text"
+            app:layout_constraintTop_toBottomOf="@id/iv_image"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <!-- Flower 2 -->
+        <!-- Flower 2 -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_image2"
+            android:layout_width="0dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/desc_image1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_image2"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_below="@id/desc_image1"
-                android:layout_marginTop="58dp"
-                android:scaleType="centerCrop" />
+        <EditText
+            android:id="@+id/desc_image2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Enter description of flower 2"
+            android:textColor="@android:color/black"
+            android:inputType="text"
+            app:layout_constraintTop_toBottomOf="@id/iv_image2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <EditText
-                android:id="@+id/desc_image2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/iv_image2"
-                android:hint="Enter description of flower 2"
-                android:textColor="@android:color/black"
-                android:inputType="text"
-                android:padding="16dp" />
+        <!-- Flower 3 -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_image3"
+            android:layout_width="0dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/desc_image2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <!-- Flower 3 -->
+        <EditText
+            android:id="@+id/desc_image3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Enter description of flower 3"
+            android:textColor="@android:color/black"
+            android:inputType="text"
+            app:layout_constraintTop_toBottomOf="@id/iv_image3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_image3"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_below="@id/desc_image2"
-                android:layout_marginTop="10dp"
-                android:scaleType="centerCrop" />
+        <!-- Flower 4 -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_image4"
+            android:layout_width="0dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/desc_image3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-            <EditText
-                android:id="@+id/desc_image3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/iv_image3"
-                android:hint="Enter description of flower 3"
-                android:textColor="@android:color/black"
-                android:inputType="text"
-                android:padding="16dp" />
-
-            <!-- Flower 4 -->
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_image4"
-                android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_below="@id/desc_image3"
-                android:layout_marginTop="20dp"
-                android:scaleType="centerCrop" />
-
-            <EditText
-                android:id="@+id/desc_image4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/iv_image4"
-                android:hint="Enter description of flower 4"
-                android:textColor="@android:color/black"
-                android:inputType="text"
-                android:padding="16dp" />
-
-        </RelativeLayout>
-    </ScrollView>
+        <EditText
+            android:id="@+id/desc_image4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Enter description of flower 4"
+            android:textColor="@android:color/black"
+            android:inputType="text"
+            app:layout_constraintTop_toBottomOf="@id/iv_image4"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
 
     <!-- Fragment Container -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainer"
-        android:layout_width="match_parent"
-        android:layout_height="620dp"
-        android:layout_below="@id/toolbar" />
+<androidx.fragment.app.FragmentContainerView
+android:id="@+id/fragmentContainer"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+app:layout_constraintTop_toBottomOf="@id/scrollView"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+app:layout_constraintEnd_toEndOf="parent"/>
 
-</RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "668489333931",
+    "project_id": "cloudcomputingproject-b4b2b",
+    "storage_bucket": "cloudcomputingproject-b4b2b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:668489333931:android:267046e296a1eede09cbee",
+        "android_client_info": {
+          "package_name": "com.example.plantapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1hFZN7xKupjAjSPrtvg0QueaWA7GTU8E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
