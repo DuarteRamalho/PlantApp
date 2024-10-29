@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class FirebaseManager {
-    private val auth = FirebaseAuth.getInstance()
+    val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
 
