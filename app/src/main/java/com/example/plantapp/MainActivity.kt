@@ -1,6 +1,7 @@
 package com.example.plantapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -15,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.example.plantapp.auth.LoginActivity
 import com.example.plantapp.data.Plant
 import com.example.plantapp.databinding.ActivityMainBinding
 import com.example.plantapp.firebase.FirebaseManager
@@ -56,27 +58,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         firebaseManager = FirebaseManager()
-        signInAnonymously() // We'll only setup UI and load plants after successful authentication
+
+        // Check if user is authenticated
+        if (firebaseManager.auth.currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        setupUI()
+        loadSavedPlants()
     }
-    private fun signInAnonymously() {
-        firebaseManager.auth.signInAnonymously()
-            .addOnSuccessListener {
-                Toast.makeText(this, "Authentication successful", Toast.LENGTH_SHORT).show()
-                setupUI()
-                loadSavedPlants()
-            }
-            .addOnFailureListener { e ->
-                // More detailed error message
-                val errorMessage = when (e) {
-                    is FirebaseAuthInvalidCredentialsException -> "Invalid credentials: ${e.message}"
-                    is FirebaseAuthInvalidUserException -> "Invalid user: ${e.message}"
-                    is FirebaseNetworkException -> "Network error: Check your internet connection"
-                    else -> "Authentication failed: ${e.message}"
-                }
-                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
-                e.printStackTrace() // This will print the full error stack trace in logcat
-            }
-    }
+
 
     private fun setupUI() {
         binding.AddFlowersBtn.setOnClickListener {

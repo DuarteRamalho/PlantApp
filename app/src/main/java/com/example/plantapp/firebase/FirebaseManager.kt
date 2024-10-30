@@ -9,9 +9,9 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 class FirebaseManager {
-    val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+    val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
     suspend fun uploadPlant(name: String, description: String, imageUri: Uri): Result<Plant> {
         return try {
@@ -53,15 +53,16 @@ class FirebaseManager {
                 .get()
                 .await()
 
-            val plants = snapshot.documents.mapNotNull { it.toObject(Plant::class.java) }
+            val plants = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Plant::class.java)
+            }
             Result.success(plants)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun updatePlantDescription(plantId: String, description: String): Result<Unit>{
-
+    suspend fun updatePlantDescription(plantId: String, description: String): Result<Unit> {
         return try {
             firestore.collection("plants")
                 .document(plantId)
@@ -71,6 +72,5 @@ class FirebaseManager {
         } catch (e: Exception) {
             Result.failure(e)
         }
-
     }
 }
